@@ -31,8 +31,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'studio',
     'django.contrib.admin',
     'django.contrib.auth',
+    #build in user model authentication
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
