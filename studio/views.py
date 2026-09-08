@@ -6,6 +6,10 @@ def index(request):
     return HttpResponse("Hello, world.")
 
 # Create your views here.
+def home(request):
+    return render(request, "studio/home.html")
+
+
 def register(request):
 
     if request.method == "POST":
