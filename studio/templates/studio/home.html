@@ -11,6 +11,7 @@
 {% if user.is_authenticated %}
     <h1>Welcome, {{ user.username }}!</h1>
     <p>You are logged in.</p>
+
 {% else %}
     <h1>Welcome to Silver Ice Helsinki</h1>
     <p>Please log in or create an account.</p>
@@ -22,6 +23,10 @@
     <p>
         <a href="{% url 'studio:login' %}">Log in</a>
     </p>
+
 {% endif %}
+    <p>
+    <a href="{% url 'studio:trainings' %}">View Trainings</a>
+    </p>
 </body>
 </html>

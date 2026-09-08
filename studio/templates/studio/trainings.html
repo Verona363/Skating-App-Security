@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trainings</title>
+</head>
+<body>
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+    <h1>Available Trainings</h1>
+
+    {% for training in trainings %}
+
+        <h2>{{ training.title }}</h2>
+        <p>{{ training.description }}</p>
+        <p>Date: {{ training.date }}</p>
+{% if user.is_authenticated %}
+    <a href="{% url 'studio:register_for_training' training.id %}">
+        Register
+    </a>
+{% else %}
+    <a href="{% url 'studio:login' %}">
+        Log in to register
+    </a>
+{% endif %}
+    {% endfor %}
+
+</body>
+</html>

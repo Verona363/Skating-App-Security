@@ -1,7 +1,10 @@
+from django.db import IntegrityError
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .forms import ClientRegistrationForm
-from .models import Profile
+from .models import Profile, Training, Registration
 def index(request):
     return HttpResponse("Hello, world.")
 
@@ -32,3 +35,27 @@ def register(request):
         form = ClientRegistrationForm()
 
     return render(request, "studio/register.html", {"form": form})
+
+def trainings(request):
+    trainings = Training.objects.all()
+    return render(request, "studio/trainings.html", {"trainings": trainings})
+
+
+
+
+@login_required
+def register_for_training(request, training_id):
+    training = Training.objects.get(id=training_id)
+    try:
+        Registration.objects.create(
+            client=request.user,
+            training=training
+        )
+        messages.success(request, "You are registered for this training.")
+
+    except IntegrityError:
+        messages.warning(
+            request,
+            "You are already registered for this training."
+        )
+    return redirect("studio:trainings")
