@@ -1,0 +1,27 @@
+<!--Only coaches can see this page -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ training.title }}</title>
+</head>
+<body>
+    <h1>{{ training.title }}</h1>
+    <p> Date: {{ training.date }}</p>
+    <p> Coach: {{ training.coach }}</p>
+    <p> Description: {{ training.description }}</p>
+    <h2> Registered clients:</h2>
+
+    {% for registration in registrations %}
+
+        <p>{{ registration.client.username }}</p>
+        <!--Later i want to make active linkn, leading to user profile if we click the username -->
+    {% empty %}
+        <p>No clients registered yet.</p>
+        <!--<a href="{% url 'studio:profile' client.id %}">-->
+    {% endfor %}
+
+
+
+</body>
+</html>

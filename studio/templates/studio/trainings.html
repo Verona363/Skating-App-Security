@@ -13,8 +13,12 @@
     <h1>Available Trainings</h1>
 
     {% for training in trainings %}
-
-        <h2>{{ training.title }}</h2>
+        {% if user.is_authenticated and user.profile.role == "COACH" %}
+            <a href="{% url 'studio:training' training.id %}">
+            <h2>{{ training.title }}</h2></a>
+        {% else %}
+            <h2>{{ training.title }}</h2>
+        {% endif %}
         <p>{{ training.description }}</p>
         <p>Date: {{ training.date }}</p>
 {% if user.is_authenticated %}
@@ -30,3 +34,5 @@
 
 </body>
 </html>
+
+<!-- for the client lets add you]re registered if registered and add buttons cancel registration-->

@@ -11,6 +11,7 @@
         {% csrf_token %}
 
         {{ form.as_p }}
+        <!--.as_p means Take the form object I passed from the view and render all of its fields as HTML paragraphs -->
 
         <button type="submit">Log in</button>
     </form>

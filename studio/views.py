@@ -1,7 +1,7 @@
 from django.db import IntegrityError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from .forms import ClientRegistrationForm
 from .models import Profile, Training, Registration
@@ -40,6 +40,16 @@ def trainings(request):
     trainings = Training.objects.all()
     return render(request, "studio/trainings.html", {"trainings": trainings})
 
+@login_required
+def training(request, training_id):
+    if request.user.profile.role =='COACH':
+        training=get_object_or_404(Training, id=training_id)
+        registrations=Registration.objects.filter(training=training)
+        return render(request, "studio/training.html", {"training": training, "registrations": registrations} )
+    else:
+        return redirect("studio:trainings")
+
+
 
 
 
@@ -49,6 +59,7 @@ def register_for_training(request, training_id):
     try:
         Registration.objects.create(
             client=request.user,
+            #what if some other client replaces session.cookie and registers is it possible
             training=training
         )
         messages.success(request, "You are registered for this training.")
@@ -59,3 +70,4 @@ def register_for_training(request, training_id):
             "You are already registered for this training."
         )
     return redirect("studio:trainings")
+
