@@ -21,11 +21,21 @@
         {% endif %}
         <p>{{ training.description }}</p>
         <p>Date: {{ training.date }}</p>
-{% if user.is_authenticated %}
-    <a href="{% url 'studio:register_for_training' training.id %}">
-        Register
-    </a>
-{% else %}
+        {% if user.is_authenticated%}
+            {% if training.id in registered_training_ids %}
+
+                <form method="post" action="{% url 'studio:cancel_registration' training.id %}">
+                {% csrf_token %}
+                <button type="submit">Cancel registration</button>
+                </form>
+            {% else %}
+                <form method="post" action="{% url 'studio:register_for_training' training.id %}">
+                {% csrf_token %}
+                <button type="submit">Register</button>
+            </form>
+            {% endif %}
+        {% else %}
+        
     <a href="{% url 'studio:login' %}">
         Log in to register
     </a>
@@ -34,5 +44,3 @@
 
 </body>
 </html>
-
-<!-- for the client lets add you]re registered if registered and add buttons cancel registration-->

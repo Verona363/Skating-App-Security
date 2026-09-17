@@ -17,5 +17,6 @@ urlpatterns = [
     views.register_for_training,
     name="register_for_training",
 ),
-    path("training/<int:training_id>/", views.training, name="training")
+    path("training/<int:training_id>/", views.training, name="training"),
+    path("training/<int:training_id>/cancel_registration/", views.cancel_registration, name="cancel_registration")
 ]
