@@ -114,3 +114,4 @@ def cancel_registration(request, training_id):
                     "This training does not exist"
                     )
     return redirect("studio:trainings")
+
