@@ -11,6 +11,15 @@
 {% if user.is_authenticated %}
     <h1>Welcome, {{ user.username }}!</h1>
     <p>You are logged in.</p>
+    {% if membership %}
+        <h3> Your membership</h3>
+        <p>Trainings left: {{membership.trainings_left}} </p>
+        <p> Purchased at: {{membership.purchased_at}} </p>
+        <p> Valid until: {{membership.valid_until}} </p>
+    {% else %}
+        <h3>You don't have a membership yet</h3>
+    {% endif %}
+
 
 {% else %}
     <h1>Welcome to Silver Ice Helsinki</h1>

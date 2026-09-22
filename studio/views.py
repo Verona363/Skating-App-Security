@@ -4,13 +4,22 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from .forms import ClientRegistrationForm
-from .models import Profile, Training, Registration
+from .models import Profile, Training, Registration, Membership
+from django.utils import timezone
 def index(request):
     return HttpResponse("Hello, world.")
 
 # Create your views here.
 def home(request):
-    return render(request, "studio/home.html")
+    membership=None
+    if request.user.is_authenticated:
+        membership=Membership.objects.filter(
+            client=request.user
+            ).order_by("-purchased_at").first()
+        
+    return render(request, "studio/home.html", {"membership": membership})
+#"memebrship" is HTML variable
+# memebership backend variable
 
 
 def register(request):
@@ -66,6 +75,21 @@ def training(request, training_id):
 @login_required
 def register_for_training(request, training_id):
     if request.method == "POST":
+        membership=Membership.objects.filter(client=request.user
+            ).order_by("-purchased_at").first()
+        #gets the most recently purchased membership
+        today= timezone.localdate()
+        if (membership is None 
+            or membership.trainings_left==0
+            or membership.valid_until<today):
+
+            messages.warning(
+                    request,
+                    "You don't have any valid trainings left or ypur membership is not valid.")
+            return redirect("studio:trainings")
+
+
+        
     #we also need to add a feature for checking whther the training exists:
         try:
             training = Training.objects.get(id=training_id)
@@ -75,6 +99,8 @@ def register_for_training(request, training_id):
                     #what if some other client replaces session.cookie and registers is it possible
                     training=training)
                 messages.success(request, "You are registered for this training.")
+                membership.trainings_left-=1
+                membership.save()
 
             except IntegrityError:
                 messages.warning(
