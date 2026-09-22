@@ -38,7 +38,13 @@ def register(request):
                 role="CLIENT"
             )
 
-            return redirect("login")
+            messages.success(
+                request,
+                "Your account has been created successfully. Please log in."
+            )
+            #add if messages to html template next
+
+            return redirect("studio:login")
 
     else:
         form = ClientRegistrationForm()
@@ -74,7 +80,9 @@ def training(request, training_id):
 
 @login_required
 def register_for_training(request, training_id):
-    if request.method == "POST":
+    if request.method != "POST":
+        return redirect("studio:trainings")
+    elif request.method == "POST":
         membership=Membership.objects.filter(client=request.user
             ).order_by("-purchased_at").first()
         #gets the most recently purchased membership
@@ -128,6 +136,10 @@ def cancel_registration(request, training_id):
                 messages.success(
                     request, "Reservation successfully canceled."
                 )
+                membership=Membership.objects.filter(client=request.user).order_by("-purchased_at").first()
+                if membership:
+                    membership.trainings_left+=1
+                    membership.save()
                 return redirect ("studio:trainings")
             except Registration.DoesNotExist:
                 messages.warning(
