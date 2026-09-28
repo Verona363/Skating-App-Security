@@ -15,10 +15,18 @@
     {% for registration in registrations %}
 
         <p>{{ registration.client.username }}</p>
+        {% if user.is_staff %}
+        <form method="post" action="{% url 'studio:coach_cancel_registration' registration.id %}">
+        {% csrf_token %}
+        <button type="submit">Cancel registration</button>
+        </form>
+        {% endif %}
         <!--Later i want to make active linkn, leading to user profile if we click the username -->
     {% empty %}
         <p>No clients registered yet.</p>
-        <!--<a href="{% url 'studio:profile' client.id %}">-->
+        {% comment %}
+        Later: make the username a link to the client's profile.
+        {% endcomment %}
     {% endfor %}
 
 

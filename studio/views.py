@@ -52,7 +52,10 @@ def register(request):
     return render(request, "studio/register.html", {"form": form})
 
 def trainings(request):
-    trainings = Training.objects.all()
+    trainings = Training.objects.filter(date__gte=timezone.now())
+    #Django only sends trainings whose date/time is now or in the future to the template.
+    #Even after hiding past trainings, someone could manually send:
+    #POST /trainings/5/register/ for an old training
     registered_training_ids = set()
     if request.user.is_authenticated:
         registered_training_ids=set(
@@ -82,12 +85,11 @@ def training(request, training_id):
 def register_for_training(request, training_id):
     if request.method != "POST":
         return redirect("studio:trainings")
-    elif request.method == "POST":
-        membership=Membership.objects.filter(client=request.user
+    membership=Membership.objects.filter(client=request.user
             ).order_by("-purchased_at").first()
         #gets the most recently purchased membership
-        today= timezone.localdate()
-        if (membership is None 
+    today= timezone.localdate()
+    if (membership is None 
             or membership.trainings_left==0
             or membership.valid_until<today):
 
@@ -99,26 +101,86 @@ def register_for_training(request, training_id):
 
         
     #we also need to add a feature for checking whther the training exists:
-        try:
-            training = Training.objects.get(id=training_id)
-            try:
-                Registration.objects.create(
-                    client=request.user,
-                    #what if some other client replaces session.cookie and registers is it possible
-                    training=training)
-                messages.success(request, "You are registered for this training.")
-                membership.trainings_left-=1
-                membership.save()
-
-            except IntegrityError:
-                messages.warning(
+    try:
+        training = Training.objects.get(id=training_id)
+        if training.date.date() > membership.valid_until:
+            messages.warning(
                     request,
-                    "You are already registered for this training.")
-        except Training.DoesNotExist:
-            messages.warning(request, 
-                            "This training does not exist.")
+                    "Your membership expires before the training you're trying to register for.")
+            return redirect("studio:trainings")
+        
+        try:
+            Registration.objects.create(
+                client=request.user,
+                #what if some other client replaces session.cookie and registers is it possible
+                training=training)
+            messages.success(request, "You are registered for this training.")
+            membership.trainings_left-=1
+            membership.save()
 
+        except IntegrityError:
+            messages.warning(
+                request,
+                "You are already registered for this training.")
+    except Training.DoesNotExist:
+        messages.warning(request, 
+                        "This training does not exist.")
+
+    return redirect("studio:trainings")
+
+
+@login_required
+def coach_cancel_registration(request, registration_id):
+
+    if not request.user.is_staff:
         return redirect("studio:trainings")
+
+    if request.method != "POST":
+        return redirect("studio:trainings")
+
+    try:
+        registration = Registration.objects.get(id=registration_id)
+        #next block does not allow to cancel registration through the trainings page to the past training
+        if registration.training.date < timezone.now():
+            
+            messages.warning(
+                request,
+                "You cannot cancel a registration for a training that has already taken place.")
+            
+            return redirect("studio:training",training_id=registration.training.id)
+        # end of block, can be deleted later if i change my mind 
+        
+        membership = Membership.objects.filter(
+            client=registration.client,
+            valid_until__gte=timezone.localdate()
+        ).order_by("-purchased_at").first()
+
+        training_id = registration.training.id
+        #training_id = registration.training   variable would contain the Training object
+            
+        registration.delete()
+
+        if membership:
+            membership.trainings_left += 1
+            membership.save()
+
+        messages.success(
+            request,
+            "Client registration successfully canceled."
+        )
+
+    except Registration.DoesNotExist:
+        messages.warning(
+            request,
+            "This registration does not exist."
+        )
+        return redirect("studio:trainings")
+
+
+    return redirect(
+        "studio:training",
+        training_id=training_id
+    )
 
 @login_required
 def cancel_registration(request, training_id):
@@ -130,13 +192,18 @@ def cancel_registration(request, training_id):
             try:
                 registration=Registration.objects.get(training=training_id, client=request.user)
             #requiring the user to be the same as who owns the registration
+                if request.user.profile.role == "CLIENT":
+                        if registration.training.date < timezone.now():
+                            messages.warning(request,
+                                 "You cannot cancel a training that has already taken place.")
+                            return redirect("studio:trainings")
 
             #if registration.client==request.user:#hence not needed
                 registration.delete()
                 messages.success(
                     request, "Reservation successfully canceled."
                 )
-                membership=Membership.objects.filter(client=request.user).order_by("-purchased_at").first()
+                membership=Membership.objects.filter(client=request.user, valid_until__gte=timezone.localdate()).order_by("-purchased_at").first()
                 if membership:
                     membership.trainings_left+=1
                     membership.save()
