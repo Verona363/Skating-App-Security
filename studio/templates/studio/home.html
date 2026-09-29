@@ -23,6 +23,11 @@
     {% csrf_token %}
     <button type="submit">Log out</button>
     </form>
+    <p>
+    <a href="{% url 'studio:change_password' %}">
+        Change password
+    </a>
+    </p>
 
 
 {% else %}
