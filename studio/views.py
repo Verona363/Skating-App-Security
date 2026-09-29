@@ -95,7 +95,7 @@ def register_for_training(request, training_id):
 
             messages.warning(
                     request,
-                    "You don't have any valid trainings left or ypur membership is not valid.")
+                    "You don't have any valid trainings left or your membership is not valid.")
             return redirect("studio:trainings")
 
 

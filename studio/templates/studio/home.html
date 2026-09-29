@@ -19,6 +19,10 @@
     {% else %}
         <h3>You don't have a membership yet</h3>
     {% endif %}
+    <form method="post" action="{% url 'studio:logout' %}">
+    {% csrf_token %}
+    <button type="submit">Log out</button>
+    </form>
 
 
 {% else %}
@@ -37,5 +41,7 @@
     <p>
     <a href="{% url 'studio:trainings' %}">View Trainings</a>
     </p>
-</body>
+
+
+\</body>
 </html>
