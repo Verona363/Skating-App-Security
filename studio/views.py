@@ -12,14 +12,18 @@ def index(request):
 # Create your views here.
 def home(request):
     membership=None
+    membership_active=False
     if request.user.is_authenticated:
         membership=Membership.objects.filter(
             client=request.user
             ).order_by("-purchased_at").first()
-        
-    return render(request, "studio/home.html", {"membership": membership})
+
+        if membership:
+            membership_active=membership.valid_until>=timezone.localdate()
+
+    return render(request, "studio/home.html", {"membership": membership, "membership_active": membership_active})
 #"memebrship" is HTML variable
-# memebership backend variable
+# membership backend variable
 
 
 def register(request):
