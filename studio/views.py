@@ -56,10 +56,15 @@ def register(request):
     return render(request, "studio/register.html", {"form": form})
 
 def trainings(request):
+    search=request.GET.get ("search", "")
+    #gets the value from a URL such as: /trainings/?search=adult
     trainings = Training.objects.filter(date__gte=timezone.now())
     #Django only sends trainings whose date/time is now or in the future to the template.
     #Even after hiding past trainings, someone could manually send:
     #POST /trainings/5/register/ for an old training
+    if search:
+        trainings = trainings.filter(title__icontains=search)
+    
     registered_training_ids = set()
     if request.user.is_authenticated:
         registered_training_ids=set(
@@ -70,7 +75,7 @@ def trainings(request):
         #registration.training → Training object
         # registration.training_id if that training's primary key is 5.
         # givess values 1, 3 ex and set gives us {1, 3}
-    return render(request, "studio/trainings.html", {"trainings": trainings, "registered_training_ids":registered_training_ids})
+    return render(request, "studio/trainings.html", {"trainings": trainings, "registered_training_ids":registered_training_ids, "search": search})
 
 @login_required
 def training(request, training_id):

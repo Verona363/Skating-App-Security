@@ -12,6 +12,16 @@
 
     <h1>Available Trainings</h1>
 
+        <form method="get" action="{% url 'studio:trainings' %}">
+            <input
+                type="text"
+                name="search"
+                placeholder="Search trainings"
+                value="{{ search }}">
+        <button type="submit">Search</button>
+        </form>
+
+
     {% for training in trainings %}
         {% if user.is_authenticated and user.profile.role == "COACH" %}
             <a href="{% url 'studio:training' training.id %}">
