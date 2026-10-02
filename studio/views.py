@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from .forms import ClientRegistrationForm
 from .models import Profile, Training, Registration, Membership
 from django.utils import timezone
+from django.db import connection
 def index(request):
     return HttpResponse("Hello, world.")
 
@@ -63,7 +64,20 @@ def trainings(request):
     #Even after hiding past trainings, someone could manually send:
     #POST /trainings/5/register/ for an old training
     if search:
-        trainings = trainings.filter(title__icontains=search)
+        query = f"""
+        select *
+        from studio_training
+        where date >= %s
+        AND title LIKE char(37) || '{search}' || char(37)
+        """
+        #we are directly putting users search value into sql statement
+        #same query we have one parameterized value and one vulnerable value
+        
+        # Vulnerable: user input is directly inserted into the SQL query. 
+        trainings = Training.objects.raw(query, [timezone.now()])
+
+        # Secure fix:
+        # trainings = trainings.filter(title__icontains=search)
     
     registered_training_ids = set()
     if request.user.is_authenticated:
@@ -140,7 +154,7 @@ def register_for_training(request, training_id):
 
 @login_required
 def coach_cancel_registration(request, registration_id):
-
+#means only admin coach can manage cancellation of registraitons
     if not request.user.is_staff:
         return redirect("studio:trainings")
 
