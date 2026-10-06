@@ -7,6 +7,14 @@ from .forms import ClientRegistrationForm
 from .models import Profile, Training, Registration, Membership
 from django.utils import timezone
 from django.db import connection
+
+
+from django.contrib.auth import login
+from django.core.cache import cache
+from django.contrib.auth.forms import AuthenticationForm
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_ATTEMPT_TIMEOUT = 300
+
 def index(request):
     return HttpResponse("Hello, world.")
 
@@ -26,6 +34,67 @@ def home(request):
 #"memebrship" is HTML variable
 # membership backend variable
 
+#new function
+def login_view(request):
+    form = AuthenticationForm(request, data=request.POST or None)
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        ip_address = request.META.get("REMOTE_ADDR")
+        cache_key = f"login_attempts:{username}:{ip_address}"
+
+        failed_attempts = cache.get(cache_key, 0)
+
+        if failed_attempts >= MAX_LOGIN_ATTEMPTS:
+            print(
+                f"Login temporarily blocked for {username} "
+                f"from {ip_address}"
+            )
+
+            return render(
+                request,
+                "registration/login.html",
+                {
+                    "form": form,
+                    "rate_limited": True,
+                },
+            )
+
+        if form.is_valid():
+            user = form.get_user()
+
+            login(request, user)
+            cache.delete(cache_key)
+
+            return redirect("studio:home")
+
+        failed_attempts += 1
+
+        cache.set(
+            cache_key,
+            failed_attempts,
+            LOGIN_ATTEMPT_TIMEOUT
+        )
+
+        print(
+            f"Failed login attempt {failed_attempts} "
+            f"for {username} from {ip_address}"
+        )
+
+        return render(
+            request,
+            "registration/login.html",
+            {
+                "form": form,
+                "login_error": True,
+            },
+        )
+
+    return render(
+        request,
+        "registration/login.html",
+        {"form": form},
+    )
 
 def register(request):
 
@@ -77,7 +146,7 @@ def trainings(request):
         trainings = Training.objects.raw(query, [timezone.now()])
 
         # Secure fix:
-        # trainings = trainings.filter(title__icontains=search)
+        #trainings = trainings.filter(title__icontains=search)
     
     registered_training_ids = set()
     if request.user.is_authenticated:

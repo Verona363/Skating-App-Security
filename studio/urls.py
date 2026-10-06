@@ -2,6 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 from django.contrib.auth.views import LogoutView, PasswordChangeView
 from . import views
+from .views import login_view
 
 app_name="studio"
 
@@ -10,7 +11,7 @@ urlpatterns = [
     path("register/", views.register, name = "register"),
     #name = "register" gives this URL a name that we can use later in templates:
     #{% url "studio:register" %}
-    path("login/", auth_views.LoginView.as_view(), name="login"),
+    path("login/", login_view, name="login"), 
     path("trainings/", views.trainings, name="trainings"),
     path(
     "trainings/<int:training_id>/register/",
