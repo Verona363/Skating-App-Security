@@ -175,12 +175,14 @@ def trainings(request):
 
 @login_required
 def training(request, training_id):
-    if request.user.profile.role =='COACH':
+    # A01 FIX: add role check
+    # if request.user.profile.role =='COACH':
         training=get_object_or_404(Training, id=training_id)
         registrations=Registration.objects.filter(training=training)
         return render(request, "studio/training.html", {"training": training, "registrations": registrations} )
-    else:
-        
+    
+    #else:-> A01 FIX: add role check
+
     # A09 FIX:  add security logging to record unauthorized access attempts
     #     logger.warning(
     #     "Unauthorized training access attempt: "
@@ -188,7 +190,7 @@ def training(request, training_id):
     #     request.user.username,
     #     training_id,
     # )
-        return redirect("studio:trainings")
+        #return redirect("studio:trainings") -> A01 FIX: add role check
 
 
 
