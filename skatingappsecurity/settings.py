@@ -27,6 +27,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# A05 FIX: disable detailed debug error pages
+# DEBUG = False
+# ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+
 
 # Application definition
 
