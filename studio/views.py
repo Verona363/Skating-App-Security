@@ -9,11 +9,21 @@ from django.utils import timezone
 from django.db import connection
 
 
+
 from django.contrib.auth import login
-from django.core.cache import cache
 from django.contrib.auth.forms import AuthenticationForm
-MAX_LOGIN_ATTEMPTS = 5
-LOGIN_ATTEMPT_TIMEOUT = 300
+
+# A09 FIX:  add security logging to record unauthorized access attempts
+# import logging
+# logger = logging.getLogger(__name__)
+
+
+# A07 FIX: add rate limiting to protect against automated login attempts
+
+# from django.core.cache import cache
+# MAX_LOGIN_ATTEMPTS = 5 # Maximum number of failed login attempts before temporary blocking
+# LOGIN_ATTEMPT_TIMEOUT = 300 # Lockout duration in seconds (5 minutes)
+
 
 def index(request):
     return HttpResponse("Hello, world.")
@@ -40,46 +50,49 @@ def login_view(request):
 
     if request.method == "POST":
         username = request.POST.get("username")
-        ip_address = request.META.get("REMOTE_ADDR")
-        cache_key = f"login_attempts:{username}:{ip_address}"
 
-        failed_attempts = cache.get(cache_key, 0)
+        # A07 FIX: track login attempts by username and IP address
 
-        if failed_attempts >= MAX_LOGIN_ATTEMPTS:
-            print(
-                f"Login temporarily blocked for {username} "
-                f"from {ip_address}"
-            )
+        # ip_address = request.META.get("REMOTE_ADDR")
+        # cache_key = f"login_attempts:{username}:{ip_address}"
 
-            return render(
-                request,
-                "registration/login.html",
-                {
-                    "form": form,
-                    "rate_limited": True,
-                },
-            )
+        #failed_attempts = cache.get(cache_key, 0)
+
+        # if failed_attempts >= MAX_LOGIN_ATTEMPTS:
+        #     print(
+        #         f"Login temporarily blocked for {username} "
+        #         f"from {ip_address}"
+        #     )
+
+        #     return render(
+        #         request,
+        #         "registration/login.html",
+        #         {
+        #             "form": form,
+        #             "rate_limited": True,
+        #         },
+        #     )
 
         if form.is_valid():
             user = form.get_user()
 
             login(request, user)
-            cache.delete(cache_key)
+            #cache.delete(cache_key)
 
             return redirect("studio:home")
 
-        failed_attempts += 1
+        # failed_attempts += 1
 
-        cache.set(
-            cache_key,
-            failed_attempts,
-            LOGIN_ATTEMPT_TIMEOUT
-        )
+        # cache.set(
+        #     cache_key,
+        #     failed_attempts,
+        #     LOGIN_ATTEMPT_TIMEOUT
+        # )
 
-        print(
-            f"Failed login attempt {failed_attempts} "
-            f"for {username} from {ip_address}"
-        )
+        # print(
+        #     f"Failed login attempt {failed_attempts} "
+        #     f"for {username} from {ip_address}"
+        # )
 
         return render(
             request,
@@ -167,6 +180,14 @@ def training(request, training_id):
         registrations=Registration.objects.filter(training=training)
         return render(request, "studio/training.html", {"training": training, "registrations": registrations} )
     else:
+        
+    # A09 FIX:  add security logging to record unauthorized access attempts
+    #     logger.warning(
+    #     "Unauthorized training access attempt: "
+    #     "user=%s, training_id=%s",
+    #     request.user.username,
+    #     training_id,
+    # )
         return redirect("studio:trainings")
 
 
